@@ -14,7 +14,7 @@ This sample app uses SceneKit’s node-based audio API to associate environmenta
 
 ## Run an AR Session and Place Virtual Content
 
-Before you can use audio, you need to set up a session and place the object from which to play sound. For simplicity, this sample runs a world tracking configuration and places a virtual object on the first horizontal plane that it detects. For more detail about this kind of session setup, see [Building Your First AR Experience](https://developer.apple.com/documentation/arkit/building_your_first_ar_experience). The object placement approach in this sample is similar to the one demonstrated in [Handling 3D Interaction and UI Controls in Augmented Reality](https://developer.apple.com/documentation/arkit/handling_3d_interaction_and_ui_controls_in_augmented_reality).
+Before you can use audio, you need to set up a session and place the object from which to play sound. For simplicity, this sample runs a world tracking configuration and places a virtual object on the first horizontal plane that it detects. For more detail about this kind of session setup, see [Tracking and Visualizing Planes](https://developer.apple.com/documentation/arkit/tracking_and_visualizing_planes). The object placement approach in this sample is similar to the one demonstrated in [Placing Objects and Handling 3D Interaction](https://developer.apple.com/documentation/arkit/placing_objects_and_handling_3d_interaction).
 
 ## Add 3D Audio to the Scene
 
