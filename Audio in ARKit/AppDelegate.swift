@@ -5,12 +5,23 @@ Abstract:
 App Delegate for the ARKit with audio sample.
 */
 
+import BoseWearable
 import UIKit
 import ARKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
+    
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions
+        launchOptions: [UIApplication.LaunchOptionsKey: Any]?) ->
+        Bool {
+            //  Configure and initialize the library here!!!
+            BoseWearable.enableCommonLogging()
+            BoseWearable.configure()
+            return true
+    }
     
     func applicationDidFinishLaunching(_ application: UIApplication) {
         guard ARWorldTrackingConfiguration.isSupported else {

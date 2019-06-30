@@ -8,8 +8,9 @@ Main view controller for the AR experience.
 import UIKit
 import SceneKit
 import ARKit
+import BoseWearable
 
-class ViewController: UIViewController, ARSCNViewDelegate {
+class ViewController: UIViewController, ARSCNViewDelegate, SensorDispatchHandler {
 
     // MARK: - IBOutlets
     
@@ -17,6 +18,11 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     @IBOutlet weak var sessionInfoLabel: UILabel!
     @IBOutlet weak var sceneView: ARSCNView!
     @IBOutlet weak var restartExperienceButton: UIButton!
+    
+    // Wearable session
+    var session: WearableDeviceSession!
+    private var token: ListenerToken?
+    let sensorGestureDispatch = SensorDispatch(queue: .main)
 
     /// Source for audio playback
     var audioSource: SCNAudioSource!
@@ -49,6 +55,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
          instead modulates a global lighting environment map for use with
          physically based materials, so disable automatic lighting.
          */
+        sensorGestureDispatch.handler = self.sensorGestureDispatch as? SensorDispatchHandler
+        sensorGestureDispatch.gestureDataCallback = { [weak self] gesture, timestamp in
+            self?.gestureMusic()
+            
+            // Do any additional setup after loading the view.
+        }
+        
+        createBoseHardwareSession()
+        
         sceneView.automaticallyUpdatesLighting = false
         
         // Set up object node
@@ -58,6 +73,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Set up the capture camera
         setUpCamera()
     }
+    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -88,6 +104,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Update `screenCenter` since the orientation of the device changed.
         screenCenter = CGPoint(x: size.width / 2, y: size.height / 2)
     }
+    
     
     // MARK: - Internal methods
     
@@ -229,7 +246,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.session.run(configuration, options: [])
         
         // Play a positional environment sound layer from the newly placed object
-        playSound()
+        // playSound()
     }
     
     func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
@@ -304,5 +321,97 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         objectNode.removeAllAudioPlayers()
         // Create a player from the source and add it to `objectNode`
         objectNode.addAudioPlayer(SCNAudioPlayer(source: audioSource))
+    }
+    
+    func createBoseHardwareSession(){
+        let gestureIntent = GestureIntent(gestures: [.doubleTap])
+        
+        BoseWearable.shared.startConnection(mode: .alwaysShow, gestureIntent: gestureIntent) { result in
+            switch result {
+            case .success(let session):
+                self.session = session
+                self.session.delegate = self as? WearableDeviceSessionDelegate
+                
+                self.listenForWearableDeviceEvents()
+                self.configureGesture()
+                
+                
+            case .failure(let error):
+                print("error in starting device", error)
+                self.displayAlert(message: "BoseAR Device failed to connect", title: "Connection Failure")
+            case .cancelled:
+                print("error, cancelled")
+                self.displayAlert(message: "BoseAR Device connection has been cancelled", title: "Connection Cancelled")
+            }
+        }
+    }
+    
+    // MARK: private functions
+    private func displayAlert(message:String, title:String) {
+        let alertController = UIAlertController(title:title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("ok", comment:"Default Action"), style: .default, handler: {_ in NSLog("\"OK\"")}))
+        self.present(alertController, animated: true,  completion: nil)
+    }
+    
+    private func listenForWearableDeviceEvents() {
+        token = session.device?.addEventListener(queue: .main) { [weak self] event in
+            self?.wearableDeviceEvent(event)
+        }
+    }
+    
+    private func wearableDeviceEvent(_ event: WearableDeviceEvent) {
+        switch event {
+        case .didWriteGestureConfiguration:
+            print("did write gesture config")
+        case .didUpdateGestureConfiguration:
+            print("success updated gesture")
+        case .didFailToWriteGestureConfiguration(let error):
+            print("we have an err", error)
+        default:
+            print("default")
+            break
+        }
+    }
+    
+    private func configureGesture() {
+        session.device?.configureGestures { config in
+            config.disableAll()
+            config.set(gesture: .doubleTap, enabled: true)
+        }
+    }
+    
+    
+    private func gestureMusic() {
+        // Start and stop music on double tap
+        
+        var count = 0
+        
+        if count < 1 {
+            playSound()
+            count+=1
+        } else {
+            count-=1
+        }
+    }
+}
+
+// MARK: - WearableDeviceSessionDelegate
+extension ViewController: WearableDeviceSessionDelegate {
+    func sessionDidOpen(_ session: WearableDeviceSession) {
+        // This view controller is only shown after the session has successfully
+        // opened. It is dismissed when the session closes. We don't need to do
+        // anything here.
+    }
+    
+    func session(_ session: WearableDeviceSession, didFailToOpenWithError error: Error?) {
+        // This view controller is only shown after the session has successfully
+        // opened. It is dismissed when the session closes. We don't need to do
+        // anything here.
+        print("did fail to open with error")
+    }
+    
+    func session(_ session: WearableDeviceSession, didCloseWithError error: Error?) {
+        // The session cwas closed, possibly due to an error.
+        print("session closed with error")
     }
 }
