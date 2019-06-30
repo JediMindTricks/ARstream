@@ -384,14 +384,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, SensorDispatchHandler
     private func gestureMusic() {
         // Start and stop music on double tap
         
-        var count = 0
-        
-        if count < 1 {
-            playSound()
-            count+=1
-        } else {
-            count-=1
-        }
+        playSound()
     }
 }
 
