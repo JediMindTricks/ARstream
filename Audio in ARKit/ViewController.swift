@@ -23,6 +23,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, SensorDispatchHandler
     var session: WearableDeviceSession!
     private var token: ListenerToken?
     let sensorGestureDispatch = SensorDispatch(queue: .main)
+    var isPlaying = false
 
     /// Source for audio playback
     var audioSource: SCNAudioSource!
@@ -57,7 +58,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, SensorDispatchHandler
          */
         sensorGestureDispatch.handler = self.sensorGestureDispatch as? SensorDispatchHandler
         sensorGestureDispatch.gestureDataCallback = { [weak self] gesture, timestamp in
-            self?.gestureMusic()
+            self?.isPlaying.toggle()
+            self?.playMusic()
             
             // Do any additional setup after loading the view.
         }
@@ -381,11 +383,18 @@ class ViewController: UIViewController, ARSCNViewDelegate, SensorDispatchHandler
     }
     
     
-    private func gestureMusic() {
+    
+    private func playMusic() {
         // Start and stop music on double tap
-        
-        playSound()
+        if isPlaying {
+            playSound()
+            print("play music")
+        } else {
+            objectNode.removeAllAudioPlayers()
+            print("stop music")
+        }
     }
+    
 }
 
 // MARK: - WearableDeviceSessionDelegate
